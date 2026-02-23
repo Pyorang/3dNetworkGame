@@ -1,20 +1,21 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Animator), typeof(PlayerMoveAbility))]
-public class PlayerAnimator : MonoBehaviour
+[RequireComponent(typeof(Animator), typeof(PlayerController))]
+public class PlayerAnimator : PlayerAbility
 {
     private Animator _animator;
-    private PlayerMoveAbility _moveAbility;
     private static readonly int MoveSpeed = Animator.StringToHash("MoveSpeed");
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _animator = GetComponent<Animator>();
-        _moveAbility = GetComponent<PlayerMoveAbility>();
     }
 
     private void Update()
     {
-        _animator.SetFloat(MoveSpeed, _moveAbility.CurrentSpeed, 0.1f, Time.deltaTime);
+        if (!_owner.PhotonView.IsMine) return;
+
+        _animator.SetFloat(MoveSpeed, _owner.GetAbility<PlayerMoveAbility>().CurrentSpeed, 0.1f, Time.deltaTime);
     }
 }

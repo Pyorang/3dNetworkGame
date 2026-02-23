@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Animator))]
-public class PlayerAttackAbility : MonoBehaviour
+[RequireComponent(typeof(Animator), typeof(PlayerController))]
+public class PlayerAttackAbility : PlayerAbility
 {
     [Header("공격 설정")]
     [Tooltip("공격 순서 (Animator의 ComboIndex 값)")]
@@ -15,13 +15,16 @@ public class PlayerAttackAbility : MonoBehaviour
     private static readonly int Attack = Animator.StringToHash("Attack");
     private static readonly int ComboIndex = Animator.StringToHash("ComboIndex");
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _animator = GetComponent<Animator>();
     }
 
     private void Update()
     {
+        if (!_owner.PhotonView.IsMine) return;
+
         if (Input.GetMouseButtonDown(0))
         {
             TryAttack();

@@ -13,11 +13,17 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
 
     private string _version = "0.0.1";
     private string _nickName = "Pyorang";
+    public Transform Spawnpoint;
 
     private void Start()
     {
+        _nickName += $"_ㅓ{UnityEngine.Random.Range(100, 000)}"; // 랜덤한 숫자를 붙여서 닉네임 중복 방지"
+
         PhotonNetwork.GameVersion = _version;
         PhotonNetwork.NickName = _nickName;
+
+        PhotonNetwork.SendRate = 30; // 얼마나 자주 데이터를 송수신할 것인가.. (실제 송수신)
+        PhotonNetwork.SerializationRate = 10; // 얼마나 자주 데이터를 직렬화 할 것인지. (송수신 준비)
 
         // 방장이 로드한 씬 게임에 다른 유저들도 똑같이 그 씬을 로드하도록 동기화해준다.
         // 방장 (마스터 클라이언트) : 방을 만든 '소유자' (방에는 하나의 마스터 클라이언트가 존재)
@@ -71,6 +77,9 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
         {
             Debug.Log($"{player.Key} : {player.Value.ActorNumber}");
         }
+
+        // 리소스 폴더에 "Player" 이름을 가진 프리팹을 생성(인스턴스화)하고, 
+        PhotonNetwork.Instantiate("Player", Spawnpoint.position, Quaternion.identity);
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message)

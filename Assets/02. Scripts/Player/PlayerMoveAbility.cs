@@ -1,28 +1,27 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController), typeof(PlayerStats))]
-public class PlayerMoveAbility : MonoBehaviour
+[RequireComponent(typeof(CharacterController), typeof(PlayerController))]
+public class PlayerMoveAbility : PlayerAbility
 {
     private const float GRAVITY = -9.81f;
     private CharacterController _characterController;
-    private PlayerAttackAbility _plyaerAttackAbility;
-    private PlayerStats _stats;
     public float CurrentSpeed { get; private set; }
     private float _verticalVelocity = 0f;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _characterController = GetComponent<CharacterController>();
-        _plyaerAttackAbility = GetComponent<PlayerAttackAbility>();
-        _stats = GetComponent<PlayerStats>();
     }
 
     private void Update()
     {
+        if (!_owner.PhotonView.IsMine) return;
+
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        if(_plyaerAttackAbility.IsAttacking)
+        if (_owner.GetAbility<PlayerAttackAbility>().IsAttacking)
         {
             h = 0f;
             v = 0f;
@@ -37,7 +36,7 @@ public class PlayerMoveAbility : MonoBehaviour
 
             if (Input.GetKey(KeyCode.Space))
             {
-                _verticalVelocity = _stats.JumpForce;
+                _verticalVelocity = _owner.Stat.JumpPower;
             }
         }
         else
@@ -47,7 +46,6 @@ public class PlayerMoveAbility : MonoBehaviour
 
         direction.y = _verticalVelocity;
 
-        _characterController.Move(direction * _stats.MoveSpeed * Time.deltaTime);
+        _characterController.Move(direction * _owner.Stat.MoveSpeed * Time.deltaTime);
     }
 }
-
