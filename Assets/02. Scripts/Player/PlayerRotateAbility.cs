@@ -1,12 +1,18 @@
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerStats))]
 public class PlayerRotateAbility : MonoBehaviour
 {
     public Transform CameraRoot;
-    public float RotationSpeed = 100f;
 
+    private PlayerStats _stats;
     private float _mx;
     private float _my;
+
+    private void Awake()
+    {
+        _stats = GetComponent<PlayerStats>();
+    }
 
     private void Start()
     {
@@ -15,8 +21,8 @@ public class PlayerRotateAbility : MonoBehaviour
 
     private void Update()
     {
-        _mx += Input.GetAxis("Mouse X") * RotationSpeed * Time.deltaTime;
-        _my -= Input.GetAxis("Mouse Y") * RotationSpeed * Time.deltaTime;
+        _mx += Input.GetAxis("Mouse X") * _stats.RotationSpeed * Time.deltaTime;
+        _my -= Input.GetAxis("Mouse Y") * _stats.RotationSpeed * Time.deltaTime;
 
         _my = Mathf.Clamp(_my, -90f, 90f);
 

@@ -1,15 +1,12 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(CharacterController), typeof(PlayerStats))]
 public class PlayerMoveAbility : MonoBehaviour
 {
-    public float MoveSpeed = 7f;
-
-    public float JumpForce = 2.5f;
-
     private const float GRAVITY = -9.81f;
     private CharacterController _characterController;
     private PlayerAttackAbility _plyaerAttackAbility;
+    private PlayerStats _stats;
     public float CurrentSpeed { get; private set; }
     private float _verticalVelocity = 0f;
 
@@ -17,6 +14,7 @@ public class PlayerMoveAbility : MonoBehaviour
     {
         _characterController = GetComponent<CharacterController>();
         _plyaerAttackAbility = GetComponent<PlayerAttackAbility>();
+        _stats = GetComponent<PlayerStats>();
     }
 
     private void Update()
@@ -39,7 +37,7 @@ public class PlayerMoveAbility : MonoBehaviour
 
             if (Input.GetKey(KeyCode.Space))
             {
-                _verticalVelocity = JumpForce;
+                _verticalVelocity = _stats.JumpForce;
             }
         }
         else
@@ -49,7 +47,7 @@ public class PlayerMoveAbility : MonoBehaviour
 
         direction.y = _verticalVelocity;
 
-        _characterController.Move(direction * MoveSpeed * Time.deltaTime);
+        _characterController.Move(direction * _stats.MoveSpeed * Time.deltaTime);
     }
 }
 
