@@ -6,7 +6,9 @@ public class PlayerMoveAbility : PlayerAbility
     private const float GRAVITY = -9.81f;
     private CharacterController _characterController;
     public float CurrentSpeed { get; private set; }
+    public bool IsSprinting { get; private set; }
     private float _verticalVelocity = 0f;
+    private float _staminaRegenTimer = 0f;
 
     protected override void Awake()
     {
@@ -30,6 +32,26 @@ public class PlayerMoveAbility : PlayerAbility
         Vector3 direction = (transform.forward * v + transform.right * h).normalized;
         CurrentSpeed = new Vector2(h, v).magnitude;
 
+        bool isMoving = CurrentSpeed > 0.1f;
+        bool wantsToSprint = Input.GetKey(KeyCode.LeftShift) && isMoving;
+        IsSprinting = wantsToSprint && _owner.Stat.Stamina > 0f;
+
+        if (IsSprinting)
+        {
+            _owner.Stat.Stamina -= _owner.Stat.StaminaDrainRate * Time.deltaTime;
+            _staminaRegenTimer = _owner.Stat.StaminaRegenDelay;
+        }
+        else
+        {
+            _staminaRegenTimer -= Time.deltaTime;
+            if (_staminaRegenTimer <= 0f)
+            {
+                _owner.Stat.Stamina += _owner.Stat.StaminaRegenRate * Time.deltaTime;
+            }
+        }
+
+        float speedMultiplier = IsSprinting ? _owner.Stat.SprintSpeedMultiplier : 1f;
+
         if (_characterController.isGrounded)
         {
             _verticalVelocity = 0f;
@@ -46,6 +68,6 @@ public class PlayerMoveAbility : PlayerAbility
 
         direction.y = _verticalVelocity;
 
-        _characterController.Move(direction * _owner.Stat.MoveSpeed * Time.deltaTime);
+        _characterController.Move(direction * _owner.Stat.MoveSpeed * speedMultiplier * Time.deltaTime);
     }
 }
