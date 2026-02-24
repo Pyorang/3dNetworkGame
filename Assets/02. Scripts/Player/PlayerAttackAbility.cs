@@ -35,6 +35,9 @@ public class PlayerAttackAbility : PlayerAbility
     {
         if (!_isAttacking)
         {
+            if (_owner.Stat.Stamina < _owner.Stat.AttackStaminaRequired) return;
+
+            _owner.Stat.Stamina -= _owner.Stat.AttackStaminaCost;
             _isAttacking = true;
             _currentCombo = 0;
             _animator.SetInteger(ComboIndex, ComboOrder[_currentCombo]);
@@ -42,6 +45,9 @@ public class PlayerAttackAbility : PlayerAbility
         }
         else if (_canNextAttack)
         {
+            if (_owner.Stat.Stamina < _owner.Stat.AttackStaminaRequired) return;
+
+            _owner.Stat.Stamina -= _owner.Stat.AttackStaminaCost;
             _canNextAttack = false;
             _currentCombo++;
 

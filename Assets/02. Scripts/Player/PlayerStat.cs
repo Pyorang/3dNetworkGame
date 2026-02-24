@@ -44,4 +44,9 @@ public class PlayerStat
     public float StaminaDrainRate = 20f;
     public float StaminaRegenRate = 15f;
     public float StaminaRegenDelay = 1f;
+
+    public float AttackStaminaCost = 15f;
+    public float AttackStaminaRequired = 15f;
+    public float JumpStaminaCost = 10f;
+    public float JumpStaminaRequired = 10f;
 }

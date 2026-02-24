@@ -56,8 +56,9 @@ public class PlayerMoveAbility : PlayerAbility
         {
             _verticalVelocity = 0f;
 
-            if (Input.GetKey(KeyCode.Space))
+            if (Input.GetKey(KeyCode.Space) && _owner.Stat.Stamina >= _owner.Stat.JumpStaminaRequired)
             {
+                _owner.Stat.Stamina -= _owner.Stat.JumpStaminaCost;
                 _verticalVelocity = _owner.Stat.JumpPower;
             }
         }
