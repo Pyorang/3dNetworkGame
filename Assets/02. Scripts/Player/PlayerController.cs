@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
-// 플레이어 제어자로써 외부와의 소통 또는 어빌리티들을 관리하는 역할
-public class PlayerController : MonoBehaviour, IPunObservable
+public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 {
     public PhotonView PhotonView;
     public PlayerStat Stat;
@@ -15,6 +14,13 @@ public class PlayerController : MonoBehaviour, IPunObservable
     {
         PhotonView = GetComponent<PhotonView>();
     }
+
+    [PunRPC]
+    public void TakeDamage(float damage)
+    {
+        Stat.HP -= damage;
+    }
+
 
     public T GetAbility<T>() where T : PlayerAbility
     {

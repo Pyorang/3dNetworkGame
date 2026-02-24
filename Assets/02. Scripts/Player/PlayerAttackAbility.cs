@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator), typeof(PlayerController))]
@@ -42,6 +43,7 @@ public class PlayerAttackAbility : PlayerAbility
             _currentCombo = 0;
             _animator.SetInteger(ComboIndex, ComboOrder[_currentCombo]);
             _animator.SetTrigger(Attack);
+            _owner.PhotonView.RPC(nameof(SyncAttackAnimation), RpcTarget.Others, ComboOrder[_currentCombo]);
         }
         else if (_canNextAttack)
         {
@@ -58,7 +60,15 @@ public class PlayerAttackAbility : PlayerAbility
 
             _animator.SetInteger(ComboIndex, ComboOrder[_currentCombo]);
             _animator.SetTrigger(Attack);
+            _owner.PhotonView.RPC(nameof(SyncAttackAnimation), RpcTarget.Others, ComboOrder[_currentCombo]);
         }
+    }
+
+    [PunRPC]
+    private void SyncAttackAnimation(int comboIndex)
+    {
+        _animator.SetInteger(ComboIndex, comboIndex);
+        _animator.SetTrigger(Attack);
     }
 
     public void OnCanNextAttack()
