@@ -81,7 +81,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 
     private Vector3 GetRandomSpawnPosition()
     {
-        Transform[] spawnpoints = PhotonServerManager.SpawnpointsStatic;
+        Transform[] spawnpoints = PhotonRoomManager.Instance.Spawnpoints;
         int randomIndex = UnityEngine.Random.Range(0, spawnpoints.Length);
         return spawnpoints[randomIndex].position;
     }
