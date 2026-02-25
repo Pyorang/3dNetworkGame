@@ -29,12 +29,15 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
     private string _nickName = "Pyorang";
 
     public Transform[] Spawnpoints;
+    public static Transform[] SpawnpointsStatic;
 
 
 
     private void Start()
 
     {
+        SpawnpointsStatic = Spawnpoints;
+
 
         _nickName += $"_ㅓ{UnityEngine.Random.Range(100, 000)}"; // 랜덤한 숫자를 붙여서 닉네임 중복 방지"
 

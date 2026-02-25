@@ -7,28 +7,107 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 {
     public PhotonView PhotonView;
     public PlayerStat Stat;
+    public bool IsDead { get; private set; } = false;
+
+    [SerializeField] private float _respawnDelay = 5f;
 
     private Dictionary<Type, PlayerAbility> _abilitiesCache = new();
+    private Animator _animator;
+    private CharacterController _characterController;
+    private static readonly int DieTrigger = Animator.StringToHash("Die");
 
     private void Awake()
     {
         PhotonView = GetComponent<PhotonView>();
+        _animator = GetComponent<Animator>();
+        _characterController = GetComponent<CharacterController>();
     }
+
+    #region 데미지 / 사망
 
     [PunRPC]
     public void TakeDamage(float damage)
     {
+        if (IsDead) return;
+
         Stat.HP -= damage;
+        if (Stat.HP <= 0f) Die();
     }
 
+    private void Die()
+    {
+        if (IsDead) return;
+
+        IsDead = true;
+        _animator.SetTrigger(DieTrigger);
+        PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others);
+        StartCoroutine(RespawnCoroutine());
+    }
+
+    [PunRPC]
+    private void SyncDeath()
+    {
+        IsDead = true;
+        _animator.SetTrigger(DieTrigger);
+    }
+
+    #endregion
+
+    #region 리스폰
+
+    private System.Collections.IEnumerator RespawnCoroutine()
+    {
+        yield return new WaitForSeconds(_respawnDelay);
+
+        Vector3 respawnPos = GetRandomSpawnPosition();
+        Teleport(respawnPos);
+        ResetStats();
+
+        IsDead = false;
+        _animator.SetTrigger("Idle");
+
+        PhotonView.RPC(nameof(SyncRespawn), RpcTarget.Others, respawnPos.x, respawnPos.y, respawnPos.z);
+    }
+
+    [PunRPC]
+    private void SyncRespawn(float x, float y, float z)
+    {
+        Teleport(new Vector3(x, y, z));
+        ResetStats();
+
+        IsDead = false;
+        _animator.SetTrigger("Idle");
+    }
+
+    private Vector3 GetRandomSpawnPosition()
+    {
+        Transform[] spawnpoints = PhotonServerManager.SpawnpointsStatic;
+        int randomIndex = UnityEngine.Random.Range(0, spawnpoints.Length);
+        return spawnpoints[randomIndex].position;
+    }
+
+    private void Teleport(Vector3 position)
+    {
+        _characterController.enabled = false;
+        transform.position = position;
+        _characterController.enabled = true;
+    }
+
+    private void ResetStats()
+    {
+        Stat.HP = Stat.MaxHp;
+        Stat.Stamina = Stat.MaxStamina;
+    }
+
+    #endregion
+
+    #region 유틸리티
 
     public T GetAbility<T>() where T : PlayerAbility
     {
         var type = typeof(T);
         if (_abilitiesCache.TryGetValue(type, out PlayerAbility ability))
-        {
             return ability as T;
-        }
 
         ability = GetComponent<T>();
         if (ability != null)
@@ -40,26 +119,23 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         throw new Exception($"어빌리티 {type.Name}을 {gameObject.name}에서 찾을 수 없습니다.");
     }
 
-    // 데이터 동기화를 위한 데이터 읽기(전송), 쓰기(수신) 메서드
+    #endregion
+
+    #region 네트워크 동기화
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        // 스트림 : '시냇물'처럼 데이터가 멈추지 않고 연속적으로 흐르는 데이터 흐름
-        //        : 서버에서 주고받을 데이터가 담겨있는 변수
-
-        // 읽기 / 쓰기 모드
         if (stream.IsWriting)
         {
-            //Debug.Log("전송중...");
-            // 이 PhotonView의 데이터를 보내줘야 하는 상황
-            stream.SendNext(Stat.HP);   // 현재 체력
-            stream.SendNext(Stat.Stamina);   // 현재 마나
+            stream.SendNext(Stat.HP);
+            stream.SendNext(Stat.Stamina);
         }
-        else if(stream.IsReading)
+        else if (stream.IsReading)
         {
-            //Debug.Log("수신중...");
-            // 이 PhotonView의 데이터를 받아야 하는 상황
-            Stat.HP = (float)stream.ReceiveNext();   // 체력 데이터 수신
-            Stat.Stamina = (float)stream.ReceiveNext();   // 마나 데이터 수신
+            Stat.HP = (float)stream.ReceiveNext();
+            Stat.Stamina = (float)stream.ReceiveNext();
         }
     }
+
+    #endregion
 }

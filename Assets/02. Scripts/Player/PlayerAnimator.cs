@@ -14,7 +14,7 @@ public class PlayerAnimator : PlayerAbility
 
     private void Update()
     {
-        if (!_owner.PhotonView.IsMine) return;
+        if (!_owner.PhotonView.IsMine || _owner.IsDead) return;
 
         _animator.SetFloat(MoveSpeed, _owner.GetAbility<PlayerMoveAbility>().CurrentSpeed, 0.1f, Time.deltaTime);
     }

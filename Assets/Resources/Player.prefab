@@ -3372,6 +3372,7 @@ MonoBehaviour:
     AttackStaminaRequired: 15
     JumpStaminaCost: 10
     JumpStaminaRequired: 10
+  _respawnDelay: 5
 --- !u!143 &4478110910895906771
 CharacterController:
   m_ObjectHideFlags: 0
@@ -3409,6 +3410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba0447fb17aa22943aa02b4ccab390f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMoveAbility
+  _lethalFallDistance: 10
 --- !u!114 &2774603447620707046
 MonoBehaviour:
   m_ObjectHideFlags: 0

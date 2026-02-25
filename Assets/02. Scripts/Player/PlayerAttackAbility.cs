@@ -24,7 +24,7 @@ public class PlayerAttackAbility : PlayerAbility
 
     private void Update()
     {
-        if (!_owner.PhotonView.IsMine) return;
+        if (!_owner.PhotonView.IsMine || _owner.IsDead) return;
 
         if (Input.GetMouseButtonDown(0))
         {
