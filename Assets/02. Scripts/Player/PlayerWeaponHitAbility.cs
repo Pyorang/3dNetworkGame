@@ -13,6 +13,6 @@ public class PlayerWeaponHitAbility : PlayerAbility
         if (target == null) return;
         if (target.IsDead) return;
 
-        target.PhotonView.RPC(nameof(PlayerController.TakeDamage), target.PhotonView.Owner, 10f);
+        target.PhotonView.RPC(nameof(PlayerController.TakeDamage), target.PhotonView.Owner, 10f, _owner.PhotonView.Owner.NickName);
     }
 }

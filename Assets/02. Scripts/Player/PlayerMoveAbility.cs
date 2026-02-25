@@ -118,7 +118,7 @@ public class PlayerMoveAbility : PlayerAbility
                 float fallDistance = _highestY - transform.position.y;
                 if (fallDistance >= _lethalFallDistance)
                 {
-                    _owner.TakeDamage(_owner.Stat.HP);
+                    _owner.TakeDamage(_owner.Stat.HP, "Fall Damage");
                 }
             }
             _highestY = transform.position.y;
@@ -130,6 +130,12 @@ public class PlayerMoveAbility : PlayerAbility
         }
 
         _wasGrounded = isGrounded;
+    }
+
+    public void ResetFallTracking()
+    {
+        _highestY = transform.position.y;
+        _wasGrounded = true;
     }
 
     #endregion

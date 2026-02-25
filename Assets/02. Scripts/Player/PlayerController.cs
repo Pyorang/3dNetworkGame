@@ -7,6 +7,9 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 {
     public PhotonView PhotonView;
     public PlayerStat Stat;
+    public static event System.Action<string, string> OnPlayerKilled;
+    public static event System.Action<int> OnScoreChanged;
+    public int Score { get; private set; } = 0;
     public bool IsDead { get; private set; } = false;
 
     [SerializeField] private float _respawnDelay = 5f;
@@ -26,29 +29,31 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
     #region 데미지 / 사망
 
     [PunRPC]
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, string killerName)
     {
         if (IsDead) return;
 
         Stat.HP -= damage;
-        if (Stat.HP <= 0f) Die();
+        if (Stat.HP <= 0f) Die(killerName);
     }
 
-    private void Die()
+    private void Die(string killerName)
     {
         if (IsDead) return;
 
         IsDead = true;
         _animator.SetTrigger(DieTrigger);
-        PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others);
+        PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others, killerName);
+        OnPlayerKilled?.Invoke(killerName, PhotonView.Owner.NickName);
         StartCoroutine(RespawnCoroutine());
     }
 
     [PunRPC]
-    private void SyncDeath()
+    private void SyncDeath(string killerName)
     {
         IsDead = true;
         _animator.SetTrigger(DieTrigger);
+        OnPlayerKilled?.Invoke(killerName, PhotonView.Owner.NickName);
     }
 
     #endregion
@@ -62,6 +67,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         Vector3 respawnPos = GetRandomSpawnPosition();
         Teleport(respawnPos);
         ResetStats();
+        GetAbility<PlayerMoveAbility>()?.ResetFallTracking();
 
         IsDead = false;
         _animator.SetTrigger("Idle");
@@ -99,6 +105,13 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         Stat.Stamina = Stat.MaxStamina;
     }
 
+    public void AddScore(int amount)
+    {
+        Score += amount;
+        if (PhotonView.IsMine)
+            OnScoreChanged?.Invoke(Score);
+    }
+
     #endregion
 
     #region 유틸리티
@@ -129,11 +142,13 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         {
             stream.SendNext(Stat.HP);
             stream.SendNext(Stat.Stamina);
+            stream.SendNext(Score);
         }
         else if (stream.IsReading)
         {
             Stat.HP = (float)stream.ReceiveNext();
             Stat.Stamina = (float)stream.ReceiveNext();
+            Score = (int)stream.ReceiveNext();
         }
     }
 

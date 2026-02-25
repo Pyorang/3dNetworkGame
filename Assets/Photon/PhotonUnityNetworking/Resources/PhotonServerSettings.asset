@@ -46,6 +46,7 @@ MonoBehaviour:
   - SyncAttackAnimation
   - SyncDeath
   - SyncRespawn
+  - RPC_Collect
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
