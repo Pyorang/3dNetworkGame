@@ -45,6 +45,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         _animator.SetTrigger(DieTrigger);
         PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others, killerName);
         OnPlayerKilled?.Invoke(killerName, PhotonView.Owner.NickName);
+        ScoreItemSpawner.Instance.RequestSpawnItems(transform.position);
         StartCoroutine(RespawnCoroutine());
     }
 

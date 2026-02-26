@@ -1,7 +1,7 @@
+using System.Collections;
 using Photon.Pun;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class ScoreItem : MonoBehaviourPun
 {
     [SerializeField] private int _scoreValue = 100;
@@ -19,7 +19,17 @@ public class ScoreItem : MonoBehaviourPun
 
     private void Start()
     {
-        Destroy(gameObject, _lifetime);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            StartCoroutine(DestroyAfterLifetime());
+        }
+    }
+
+    private IEnumerator DestroyAfterLifetime()
+    {
+        yield return new WaitForSeconds(_lifetime);
+        if (gameObject != null)
+            PhotonNetwork.Destroy(gameObject);
     }
 
     private void Update()

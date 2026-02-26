@@ -16,7 +16,7 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        _nickName += $"_ㅓ{UnityEngine.Random.Range(100, 000)}";
+        _nickName += $"_{UnityEngine.Random.Range(100, 000)}";
 
         PhotonNetwork.GameVersion = _version;
         PhotonNetwork.NickName = _nickName;
