@@ -48,6 +48,8 @@ MonoBehaviour:
   - SyncRespawn
   - RPC_Collect
   - RPC_SpawnItems
+  - RPC_SpawnDeathDropItems
+  - RPC_SpawnPeriodicDropItems
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

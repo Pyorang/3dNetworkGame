@@ -3373,6 +3373,7 @@ MonoBehaviour:
     JumpStaminaCost: 10
     JumpStaminaRequired: 10
   _respawnDelay: 5
+  _itemDropInterval: 10
 --- !u!143 &4478110910895906771
 CharacterController:
   m_ObjectHideFlags: 0

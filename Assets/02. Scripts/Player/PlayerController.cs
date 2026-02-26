@@ -13,6 +13,8 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
     public bool IsDead { get; private set; } = false;
 
     [SerializeField] private float _respawnDelay = 5f;
+    [SerializeField] private float _itemDropInterval = 10f;
+    private float _itemDropTimer;
 
     private Dictionary<Type, PlayerAbility> _abilitiesCache = new();
     private Animator _animator;
@@ -24,6 +26,19 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         PhotonView = GetComponent<PhotonView>();
         _animator = GetComponent<Animator>();
         _characterController = GetComponent<CharacterController>();
+    }
+
+    private void Update()
+    {
+        if (!PhotonView.IsMine) return;
+        if (IsDead) return;
+
+        _itemDropTimer += Time.deltaTime;
+        if (_itemDropTimer >= _itemDropInterval)
+        {
+            _itemDropTimer = 0f;
+            ScoreItemSpawner.Instance.RequestPeriodicDrop(transform.position);
+        }
     }
 
     #region 데미지 / 사망
@@ -45,7 +60,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         _animator.SetTrigger(DieTrigger);
         PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others, killerName);
         OnPlayerKilled?.Invoke(killerName, PhotonView.Owner.NickName);
-        ScoreItemSpawner.Instance.RequestSpawnItems(transform.position);
+        ScoreItemSpawner.Instance.RequestSpawnDeathDrop(transform.position);
         StartCoroutine(RespawnCoroutine());
     }
 
@@ -71,6 +86,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         GetAbility<PlayerMoveAbility>()?.ResetFallTracking();
 
         IsDead = false;
+        _itemDropTimer = 0f;
         _animator.SetTrigger("Idle");
 
         PhotonView.RPC(nameof(SyncRespawn), RpcTarget.Others, respawnPos.x, respawnPos.y, respawnPos.z);
