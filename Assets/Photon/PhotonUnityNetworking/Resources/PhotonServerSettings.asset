@@ -50,6 +50,8 @@ MonoBehaviour:
   - RPC_SpawnItems
   - RPC_SpawnDeathDropItems
   - RPC_SpawnPeriodicDropItems
+  - RPC_Die
+  - RPC_Hit
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

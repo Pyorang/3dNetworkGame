@@ -9,10 +9,29 @@ public class PlayerWeaponHitAbility : PlayerAbility
         if (_owner.IsDead) return;
         if (other.transform.root == _owner.transform.root) return;
 
+        // 플레이어 공격
         PlayerController target = other.GetComponentInParent<PlayerController>();
-        if (target == null) return;
-        if (target.IsDead) return;
+        if (target != null && !target.IsDead)
+        {
+            target.PhotonView.RPC(
+                nameof(PlayerController.TakeDamage),
+                target.PhotonView.Owner,
+                _owner.Stat.AttackPower,
+                _owner.PhotonView.Owner.NickName
+            );
+            return;
+        }
 
-        target.PhotonView.RPC(nameof(PlayerController.TakeDamage), target.PhotonView.Owner, 10f, _owner.PhotonView.Owner.NickName);
+        // 곰 공격 (MasterClient에게 RPC)
+        BearController bear = other.GetComponentInParent<BearController>();
+        if (bear != null)
+        {
+            bear.photonView.RPC(
+                nameof(BearController.TakeDamage),
+                RpcTarget.MasterClient,
+                _owner.Stat.AttackPower,
+                _owner.PhotonView.Owner.NickName
+            );
+        }
     }
 }

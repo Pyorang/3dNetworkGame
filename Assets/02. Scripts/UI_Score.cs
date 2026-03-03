@@ -7,12 +7,23 @@ public class UI_Score : MonoBehaviour
 
     private void OnEnable()
     {
-        PlayerController.OnScoreChanged += OnScoreChanged;
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.OnLocalScoreChanged += OnScoreChanged;
+    }
+
+    private void Start()
+    {
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.OnLocalScoreChanged -= OnScoreChanged;
+            ScoreManager.Instance.OnLocalScoreChanged += OnScoreChanged;
+        }
     }
 
     private void OnDisable()
     {
-        PlayerController.OnScoreChanged -= OnScoreChanged;
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.OnLocalScoreChanged -= OnScoreChanged;
     }
 
     private void OnScoreChanged(int score)

@@ -21,8 +21,8 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
         PhotonNetwork.GameVersion = _version;
         PhotonNetwork.NickName = _nickName;
 
-        PhotonNetwork.SendRate = 30; // 얼마나 자주 데이터를 송수신할 것인가.. (실제 송수신)
-        PhotonNetwork.SerializationRate = 10; // 얼마나 자주 데이터를 직렬화 할 것인지. (송수신 준비)
+        PhotonNetwork.SendRate = 40; // 얼마나 자주 데이터를 송수신할 것인가.. (실제 송수신)
+        PhotonNetwork.SerializationRate = 30; // 얼마나 자주 데이터를 직렬화 할 것인지. (송수신 준비)
 
         // 방장이 로드한 씬 게임에 다른 유저들도 똑같이 그 씬을 로드하도록 동기화해준다.
         // 방장 (마스터 클라이언트) : 방을 만든 '소유자' (방에는 하나의 마스터 클라이언트가 존재)

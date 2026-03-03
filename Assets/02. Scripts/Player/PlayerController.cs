@@ -8,8 +8,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
     public PhotonView PhotonView;
     public PlayerStat Stat;
     public static event System.Action<string, string> OnPlayerKilled;
-    public static event System.Action<int> OnScoreChanged;
-    public int Score { get; private set; } = 0;
+
     public bool IsDead { get; private set; } = false;
 
     [SerializeField] private float _respawnDelay = 5f;
@@ -27,6 +26,8 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         _animator = GetComponent<Animator>();
         _characterController = GetComponent<CharacterController>();
     }
+
+
 
     private void Update()
     {
@@ -124,9 +125,9 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 
     public void AddScore(int amount)
     {
-        Score += amount;
-        if (PhotonView.IsMine)
-            OnScoreChanged?.Invoke(Score);
+        if (!PhotonView.IsMine) return;
+        int current = ScoreManager.Instance.GetLocalScore();
+        ScoreManager.Instance.UpdateScore(current + amount);
     }
 
     #endregion
@@ -159,13 +160,11 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         {
             stream.SendNext(Stat.HP);
             stream.SendNext(Stat.Stamina);
-            stream.SendNext(Score);
         }
         else if (stream.IsReading)
         {
             Stat.HP = (float)stream.ReceiveNext();
             Stat.Stamina = (float)stream.ReceiveNext();
-            Score = (int)stream.ReceiveNext();
         }
     }
 

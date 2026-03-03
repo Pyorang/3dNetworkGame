@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bear Animator Controller 설정 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
+    --accent: #e94560; --accent2: #533483; --green: #4ecca3;
+    --yellow: #ffd369; --blue: #7ec8e3; --orange: #ff8c32;
+    --text: #eee; --text-dim: #8892b0; --border: rgba(255,255,255,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); }
+  .header { text-align: center; padding: 48px 24px 32px; position: relative; }
+  .header::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; }
+  .header h1 { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--yellow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  .header p { color: var(--text-dim); font-size: 0.95rem; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .params-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 48px; }
+  .param-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: transform 0.2s; }
+  .param-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .type-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; font-weight: 600; }
+  .type-float { background: rgba(78,204,163,0.15); color: var(--green); }
+  .type-trigger { background: rgba(233,69,96,0.15); color: var(--accent); }
+  .type-bool { background: rgba(126,200,227,0.15); color: var(--blue); }
+  .param-card .name { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+  .param-card .desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.4; }
+  .graph-container { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; position: relative; overflow: hidden; margin-bottom: 48px; }
+  .graph-container::before { content: ''; position: absolute; top:0;left:0;right:0;bottom:0; background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0); background-size: 24px 24px; pointer-events: none; }
+  svg.ag { width: 100%; height: auto; display: block; }
+  .sl { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; fill: #fff; text-anchor: middle; dominant-baseline: central; }
+  .tl { font-family: 'Noto Sans KR', sans-serif; font-size: 10px; fill: var(--text-dim); text-anchor: middle; }
+  .layer-info { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; margin-bottom: 48px; border-left: 4px solid var(--yellow); }
+  .layer-info h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: var(--yellow); }
+  .layer-info p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; }
+  code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; font-size: 0.78rem; color: var(--yellow); }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 48px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  th { padding: 14px 16px; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+  td { padding: 12px 16px; font-size: 0.85rem; border-top: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .fc, .tc { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.82rem; }
+  .cc { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px; display: inline-block; }
+  .nt { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; transition: border-color 0.2s; }
+  .step-card:hover { border-color: rgba(233,69,96,0.3); }
+  .step-num { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+  .step-content h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+  .step-content p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🐻 Bear Animator Controller</h1>
+  <p>Unity Animator 설정 가이드 — 상태, 전이, 파라미터 한눈에 보기</p>
+</div>
+<div class="container">
+
+  <div class="section-title">📌 애니메이터 파라미터 <span class="badge" style="background:rgba(78,204,163,0.15);color:var(--green);">총 6개</span></div>
+  <div class="params-grid">
+    <div class="param-card"><span class="type-tag type-float">Float</span><div class="name">MoveSpeed</div><div class="desc">이동 속도 블렌딩 (0=Idle, ~2=Walk, ~4=Run)</div></div>
+    <div class="param-card"><span class="type-tag type-trigger">Trigger</span><div class="name">Detect</div><div class="desc">플레이어 감지 시 발동</div></div>
+    <div class="param-card"><span class="type-tag type-trigger">Trigger</span><div class="name">Attack</div><div class="desc">공격 시작 시 발동</div></div>
+    <div class="param-card"><span class="type-tag type-trigger">Trigger</span><div class="name">Hit</div><div class="desc">피격 시 발동</div></div>
+    <div class="param-card"><span class="type-tag type-trigger">Trigger</span><div class="name">Die</div><div class="desc">사망 시 발동</div></div>
+    <div class="param-card"><span class="type-tag type-bool">Bool</span><div class="name">IsChasing</div><div class="desc">추적/복귀 중 true (달리기 블렌딩)</div></div>
+  </div>
+
+  <div class="section-title">🎬 애니메이터 스테이트 다이어그램 <span class="badge" style="background:rgba(233,69,96,0.15);color:var(--accent);">Unity 재현용</span></div>
+  <div class="graph-container">
+    <svg class="ag" viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ag" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#4ecca3"/></marker>
+        <marker id="ab" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#7ec8e3"/></marker>
+        <marker id="ao" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#ff8c32"/></marker>
+        <marker id="ap" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#b388ff"/></marker>
+        <marker id="ar" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#e94560"/></marker>
+        <marker id="ai" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#7c83ff"/></marker>
+        <marker id="ak" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#ff6bcb"/></marker>
+        <marker id="ay" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#666"/></marker>
+      </defs>
+
+      <!-- Background -->
+      <rect x="40" y="40" width="350" height="220" rx="16" fill="rgba(78,204,163,0.04)" stroke="rgba(78,204,163,0.12)" stroke-dasharray="4 4"/>
+      <text x="55" y="62" font-size="11" fill="rgba(78,204,163,0.5)" font-family="Noto Sans KR" font-weight="600">순찰 루프</text>
+      <rect x="420" y="40" width="510" height="310" rx="16" fill="rgba(233,69,96,0.04)" stroke="rgba(233,69,96,0.12)" stroke-dasharray="4 4"/>
+      <text x="435" y="62" font-size="11" fill="rgba(233,69,96,0.5)" font-family="Noto Sans KR" font-weight="600">전투 루프</text>
+      <rect x="40" y="440" width="890" height="170" rx="16" fill="rgba(255,107,203,0.04)" stroke="rgba(255,107,203,0.12)" stroke-dasharray="4 4"/>
+      <text x="55" y="462" font-size="11" fill="rgba(255,107,203,0.5)" font-family="Noto Sans KR" font-weight="600">AnyState 전이</text>
+
+      <!-- Entry -->
+      <circle cx="80" cy="140" r="20" fill="#0d4d0d" stroke="#4ecca3" stroke-width="2.5"/>
+      <text x="80" y="140" class="sl" font-size="10">Entry</text>
+
+      <!-- Idle -->
+      <rect x="150" y="110" width="130" height="56" rx="10" fill="#1b4332" stroke="#4ecca3" stroke-width="3"/>
+      <text x="215" y="135" class="sl">Idle</text>
+      <text x="215" y="155" font-size="8" fill="rgba(78,204,163,0.6)" text-anchor="middle" font-family="JetBrains Mono">(Default State)</text>
+
+      <!-- Patrol -->
+      <rect x="150" y="200" width="130" height="50" rx="10" fill="#1b3a4b" stroke="#7ec8e3" stroke-width="2"/>
+      <text x="215" y="225" class="sl">Patrol</text>
+
+      <!-- Detect -->
+      <rect x="440" y="100" width="130" height="50" rx="10" fill="#3d1f00" stroke="#ff8c32" stroke-width="2"/>
+      <text x="505" y="125" class="sl">Detect</text>
+
+      <!-- Chase -->
+      <rect x="630" y="100" width="130" height="50" rx="10" fill="#2d1340" stroke="#b388ff" stroke-width="2"/>
+      <text x="695" y="125" class="sl">Chase</text>
+
+      <!-- Attack -->
+      <rect x="790" y="180" width="130" height="50" rx="10" fill="#3b0a0a" stroke="#e94560" stroke-width="2"/>
+      <text x="855" y="205" class="sl">Attack</text>
+
+      <!-- AttackIdle -->
+      <rect x="790" y="275" width="130" height="50" rx="10" fill="#3b1a0a" stroke="#ff6b6b" stroke-width="2"/>
+      <text x="855" y="300" class="sl" font-size="11">AttackIdle</text>
+
+      <!-- Return -->
+      <rect x="440" y="310" width="130" height="50" rx="10" fill="#1a1a3e" stroke="#7c83ff" stroke-width="2"/>
+      <text x="505" y="335" class="sl">Return</text>
+
+      <!-- AnyState -->
+      <rect x="80" y="490" width="130" height="50" rx="10" fill="#2a2a2a" stroke="#aaa" stroke-width="2" stroke-dasharray="6 3"/>
+      <text x="145" y="515" class="sl" font-size="11">Any State</text>
+
+      <!-- Hit -->
+      <rect x="400" y="490" width="130" height="50" rx="10" fill="#4a1942" stroke="#ff6bcb" stroke-width="2"/>
+      <text x="465" y="515" class="sl">Hit</text>
+
+      <!-- Dead -->
+      <rect x="650" y="490" width="130" height="50" rx="10" fill="#1a1a1a" stroke="#666" stroke-width="2"/>
+      <text x="715" y="515" class="sl">Dead</text>
+
+      <!-- Transitions -->
+      <line x1="100" y1="140" x2="148" y2="138" stroke="#4ecca3" stroke-width="2" fill="none" marker-end="url(#ag)"/>
+
+      <line x1="185" y1="166" x2="185" y2="198" stroke="#7ec8e3" stroke-width="2" fill="none" marker-end="url(#ab)"/>
+      <text x="130" y="186" class="tl" font-size="9">MoveSpeed &gt; 0.1</text>
+
+      <line x1="245" y1="200" x2="245" y2="168" stroke="#4ecca3" stroke-width="2" fill="none" marker-end="url(#ag)"/>
+      <text x="300" y="186" class="tl" font-size="9">MoveSpeed &lt; 0.1</text>
+
+      <path d="M 280 125 L 438 125" stroke="#ff8c32" stroke-width="2" fill="none" marker-end="url(#ao)"/>
+      <text x="360" y="117" class="tl" font-size="9">Detect 트리거</text>
+
+      <path d="M 280 215 Q 370 215 438 140" stroke="#ff8c32" stroke-width="2" fill="none" marker-end="url(#ao)"/>
+      <text x="365" y="200" class="tl" font-size="9">Detect 트리거</text>
+
+      <line x1="570" y1="125" x2="628" y2="125" stroke="#b388ff" stroke-width="2" fill="none" marker-end="url(#ap)"/>
+      <text x="599" y="117" class="tl" font-size="9">IsChasing = true</text>
+
+      <path d="M 760 135 Q 790 160 790 178" stroke="#e94560" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      <text x="808" y="158" class="tl" font-size="9">Attack 트리거</text>
+
+      <line x1="875" y1="230" x2="875" y2="273" stroke="#e94560" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      <text x="910" y="254" class="tl" font-size="9">Has Exit Time</text>
+
+      <line x1="830" y1="275" x2="830" y2="232" stroke="#e94560" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      <text x="792" y="254" class="tl" font-size="9">Attack 트리거</text>
+
+      <path d="M 790 290 Q 730 270 730 152" stroke="#b388ff" stroke-width="2" fill="none" marker-end="url(#ap)"/>
+      <text x="740" y="240" class="tl" font-size="9">범위 이탈</text>
+
+      <path d="M 680 150 Q 680 260 572 310" stroke="#7c83ff" stroke-width="2" fill="none" marker-end="url(#ai)"/>
+      <text x="655" y="248" class="tl" font-size="9">감지 범위 이탈</text>
+
+      <path d="M 440 335 Q 280 335 240 168" stroke="#4ecca3" stroke-width="2" fill="none" marker-end="url(#ag)"/>
+      <text x="310" y="320" class="tl" font-size="9">스폰 위치 도착</text>
+
+      <line x1="210" y1="515" x2="398" y2="515" stroke="#ff6bcb" stroke-width="2" fill="none" marker-end="url(#ak)"/>
+      <text x="304" y="507" class="tl" font-size="9">Hit 트리거 (HP &gt; 0)</text>
+
+      <path d="M 210 525 Q 430 555 648 525" stroke="#666" stroke-width="2" fill="none" marker-end="url(#ay)"/>
+      <text x="440" y="558" class="tl" font-size="9">Die 트리거 (HP ≤ 0)</text>
+
+      <path d="M 465 490 Q 465 460 465 440" stroke="#ff6bcb" stroke-width="1.5" fill="none" stroke-dasharray="5 3" marker-end="url(#ak)"/>
+      <text x="540" y="460" class="tl" font-size="9">애니 종료 → 이전 상태 복귀 (코드)</text>
+
+      <!-- Legend -->
+      <g transform="translate(40, 600)">
+        <text x="0" y="0" font-size="10" fill="#8892b0" font-family="Noto Sans KR" font-weight="600">범례:</text>
+        <rect x="50" y="-10" width="14" height="14" rx="3" fill="#1b4332" stroke="#4ecca3" stroke-width="1.5"/>
+        <text x="70" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">순찰</text>
+        <rect x="110" y="-10" width="14" height="14" rx="3" fill="#3d1f00" stroke="#ff8c32" stroke-width="1.5"/>
+        <text x="130" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">감지</text>
+        <rect x="170" y="-10" width="14" height="14" rx="3" fill="#2d1340" stroke="#b388ff" stroke-width="1.5"/>
+        <text x="190" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">추적</text>
+        <rect x="230" y="-10" width="14" height="14" rx="3" fill="#3b0a0a" stroke="#e94560" stroke-width="1.5"/>
+        <text x="250" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">공격</text>
+        <rect x="290" y="-10" width="14" height="14" rx="3" fill="#1a1a3e" stroke="#7c83ff" stroke-width="1.5"/>
+        <text x="310" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">복귀</text>
+        <rect x="350" y="-10" width="14" height="14" rx="3" fill="#4a1942" stroke="#ff6bcb" stroke-width="1.5"/>
+        <text x="370" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">피격</text>
+        <rect x="410" y="-10" width="14" height="14" rx="3" fill="#1a1a1a" stroke="#666" stroke-width="1.5"/>
+        <text x="430" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">사망</text>
+        <line x1="470" y1="-3" x2="500" y2="-3" stroke="#ff6bcb" stroke-width="1.5" stroke-dasharray="5 3"/>
+        <text x="530" y="2" font-size="9" fill="#8892b0" font-family="Noto Sans KR">코드 처리</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="layer-info">
+    <h3>⚠️ 스테이트 이름이 코드와 반드시 일치해야 합니다!</h3>
+    <p>코드에서 <code>AnimatorStateInfo.IsName("이름")</code>으로 상태를 체크합니다.<br><br>
+    <code>Detect</code> · <code>Attack</code> · <code>Hit</code> — 이 3개는 반드시 정확히 일치<br><br>
+    나머지(Idle, Patrol, Chase, Return)는 <code>MoveSpeed</code>와 <code>IsChasing</code>으로 블렌딩하므로 Blend Tree로 통합 가능합니다.</p>
+  </div>
+
+  <div class="section-title">🔀 전이(Transition) 상세 설정 <span class="badge" style="background:rgba(126,200,227,0.15);color:var(--blue);">Unity에서 설정</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:14%">From</th><th style="width:14%">To</th><th style="width:25%">Condition</th><th style="width:13%">Has Exit Time</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td class="fc" style="color:#4ecca3">Entry</td><td class="tc" style="color:#4ecca3">Idle</td><td>—</td><td>—</td><td class="nt">Default State (주황색)</td></tr>
+        <tr><td class="fc" style="color:#4ecca3">Idle</td><td class="tc" style="color:#7ec8e3">Patrol</td><td><span class="cc">MoveSpeed &gt; 0.1</span></td><td>❌</td><td class="nt">Agent 움직이면 전이</td></tr>
+        <tr><td class="fc" style="color:#7ec8e3">Patrol</td><td class="tc" style="color:#4ecca3">Idle</td><td><span class="cc">MoveSpeed &lt; 0.1</span></td><td>❌</td><td class="nt">정지하면 전이</td></tr>
+        <tr><td class="fc" style="color:#4ecca3">Idle</td><td class="tc" style="color:#ff8c32">Detect</td><td><span class="cc">Detect (Trigger)</span></td><td>❌</td><td class="nt">감지 시</td></tr>
+        <tr><td class="fc" style="color:#7ec8e3">Patrol</td><td class="tc" style="color:#ff8c32">Detect</td><td><span class="cc">Detect (Trigger)</span></td><td>❌</td><td class="nt">순찰 중 감지 시</td></tr>
+        <tr><td class="fc" style="color:#ff8c32">Detect</td><td class="tc" style="color:#b388ff">Chase</td><td><span class="cc">IsChasing == true</span></td><td>✅</td><td class="nt">감지 모션 재생 후 추적</td></tr>
+        <tr><td class="fc" style="color:#b388ff">Chase</td><td class="tc" style="color:#e94560">Attack</td><td><span class="cc">Attack (Trigger)</span></td><td>❌</td><td class="nt">공격 범위 도달</td></tr>
+        <tr><td class="fc" style="color:#e94560">Attack</td><td class="tc" style="color:#4ecca3">Idle</td><td><span class="cc">MoveSpeed &lt; 0.1</span></td><td>✅</td><td class="nt">공격 완료 → AttackIdle(코드)</td></tr>
+        <tr><td class="fc" style="color:#4ecca3">Idle</td><td class="tc" style="color:#e94560">Attack</td><td><span class="cc">Attack (Trigger)</span></td><td>❌</td><td class="nt">쿨타임 후 재공격</td></tr>
+        <tr><td class="fc" style="color:#b388ff">Chase</td><td class="tc" style="color:#4ecca3">Idle</td><td><span class="cc">MoveSpeed &lt; 0.1</span></td><td>❌</td><td class="nt">복귀 완료 시</td></tr>
+        <tr style="background:rgba(255,107,203,0.05)"><td class="fc" style="color:#aaa">Any State</td><td class="tc" style="color:#ff6bcb">Hit</td><td><span class="cc">Hit (Trigger)</span></td><td>❌</td><td class="nt">⚠️ Can Transition To Self = OFF</td></tr>
+        <tr style="background:rgba(255,107,203,0.05)"><td class="fc" style="color:#ff6bcb">Hit</td><td class="tc" style="color:#4ecca3">Idle</td><td>—</td><td>✅</td><td class="nt">코드가 이전 상태 복귀</td></tr>
+        <tr style="background:rgba(100,100,100,0.05)"><td class="fc" style="color:#aaa">Any State</td><td class="tc" style="color:#666">Dead</td><td><span class="cc">Die (Trigger)</span></td><td>❌</td><td class="nt">⚠️ Can Transition To Self = OFF</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title">🛠️ Unity 설정 순서</div>
+
+  <div class="step-card"><div class="step-num">1</div><div class="step-content"><h3>Parameters 탭에서 파라미터 6개 추가</h3><p>Animator 창 좌측 Parameters 탭 → + 버튼<br><code>MoveSpeed</code>(Float) · <code>Detect</code>(Trigger) · <code>Attack</code>(Trigger) · <code>Hit</code>(Trigger) · <code>Die</code>(Trigger) · <code>IsChasing</code>(Bool)</p></div></div>
+
+  <div class="step-card"><div class="step-num">2</div><div class="step-content"><h3>스테이트 생성</h3><p>Base Layer에 우클릭 → Create State → Empty:<br><code>Idle</code> · <code>Patrol</code> · <code>Detect</code> · <code>Chase</code> · <code>Attack</code> · <code>Hit</code> · <code>Dead</code><br>Idle를 우클릭 → <strong>Set as Layer Default State</strong><br>각 스테이트 Motion에 해당 애니메이션 클립 드래그</p></div></div>
+
+  <div class="step-card"><div class="step-num">3</div><div class="step-content"><h3>Blend Tree 사용 (선택)</h3><p>Idle/Walk/Run을 Blend Tree로 묶으면 자연스럽습니다.<br>Blend Parameter: <code>MoveSpeed</code><br>Threshold: <code>0</code>=Idle, <code>2</code>=Walk, <code>4</code>=Run</p></div></div>
+
+  <div class="step-card"><div class="step-num">4</div><div class="step-content"><h3>Transition 연결</h3><p>위 전이 표 참고, 스테이트 우클릭 → Make Transition → 대상 클릭<br>화살표 선택 → Inspector에서 Conditions 추가</p></div></div>
+
+  <div class="step-card"><div class="step-num">5</div><div class="step-content"><h3>AnyState → Hit, Dead</h3><p>AnyState 우클릭 → Make Transition → <code>Hit</code>, <code>Dead</code>로 연결<br><strong>중요:</strong> 둘 다 <code>Can Transition To Self</code> 체크 해제!</p></div></div>
+
+  <div class="step-card"><div class="step-num">6</div><div class="step-content"><h3>Transition Settings 세부 조정</h3><p><strong>Transition Duration:</strong> 전투 전이는 <code>0.1초</code>로 짧게<br><strong>Has Exit Time:</strong> Detect, Attack, Hit ✅ / 나머지 ❌</p></div></div>
+
+  <div class="step-card"><div class="step-num">7</div><div class="step-content"><h3>Attack 클립에 Animation Event 추가</h3><p>Attack 클립 → Animation 창 → 데미지 프레임에 Add Event<br>Function: <code>OnAttackHit</code></p></div></div>
+
+</div>
+</body>
+</html>
