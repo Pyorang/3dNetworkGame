@@ -20,7 +20,7 @@ public class BearIdleState : BearStateBase
     {
         if (Controller.TryDetectPlayer())
         {
-            Controller.StateMachine.ChangeState(BearStateType.Detect);
+            Controller.StateMachine.ChangeState(BearStateType.Chase);
             return;
         }
 

@@ -14,6 +14,11 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
     private string _version = "0.0.1";
     private string _nickName = "Pyorang";
 
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     private void Start()
     {
         _nickName += $"_{UnityEngine.Random.Range(100, 000)}";
@@ -50,20 +55,11 @@ public class PhotonServerManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("로비 접속 완료");
         Debug.Log(PhotonNetwork.InLobby);
-
-        PhotonNetwork.JoinRandomRoom();
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
         Debug.Log($"방 입장 실패했습니다: {returnCode} - {message}");
-
-        RoomOptions roomOptions = new RoomOptions();
-        roomOptions.MaxPlayers = 20;
-        roomOptions.IsVisible = true;
-        roomOptions.IsOpen = true;
-
-        PhotonNetwork.CreateRoom("test", roomOptions);
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)

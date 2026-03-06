@@ -7,7 +7,6 @@ public class BearPatrolState : BearStateBase
     public override void Enter()
     {
         Agent.speed = Stat.WalkSpeed;
-        Animator.SetBool(BearController.HashIsChasing, false);
 
         Vector3 randomPoint = Controller.GetRandomPatrolPoint();
         Agent.SetDestination(randomPoint);
@@ -19,7 +18,7 @@ public class BearPatrolState : BearStateBase
 
         if (Controller.TryDetectPlayer())
         {
-            Controller.StateMachine.ChangeState(BearStateType.Detect);
+            Controller.StateMachine.ChangeState(BearStateType.Chase);
             return;
         }
 

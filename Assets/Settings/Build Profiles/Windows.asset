@@ -21,7 +21,9 @@ MonoBehaviour:
   m_OverrideGlobalSceneList: 1
   m_Scenes:
   - m_enabled: 1
-    m_path: Assets/01. Scenes/M_Demonstration_Mega 1.unity
+    m_path: Assets/01. Scenes/Lobby.unity
+  - m_enabled: 1
+    m_path: Assets/01. Scenes/Game.unity
   m_HasScriptingDefines: 0
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:

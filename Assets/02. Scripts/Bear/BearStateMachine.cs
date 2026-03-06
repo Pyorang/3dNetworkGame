@@ -4,7 +4,6 @@ public enum BearStateType
 {
     Idle,
     Patrol,
-    Detect,
     Chase,
     Attack,
     Return,
@@ -19,6 +18,7 @@ public class BearStateMachine
 
     public BearStateType CurrentStateType { get; private set; }
     public BearStateType PreviousStateType { get; private set; }
+    public BearStateBase CurrentState => _currentState;
 
     public System.Action OnStateChanged;
 

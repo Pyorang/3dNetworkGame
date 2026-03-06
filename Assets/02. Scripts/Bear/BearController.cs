@@ -15,11 +15,10 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
 
     // 애니메이터 해시
     public static readonly int HashMoveSpeed = Animator.StringToHash("MoveSpeed");
-    public static readonly int HashDetect = Animator.StringToHash("Detect");
-    public static readonly int HashAttack = Animator.StringToHash("Attack");
     public static readonly int HashHit = Animator.StringToHash("Hit");
     public static readonly int HashDie = Animator.StringToHash("Die");
-    public static readonly int HashIsChasing = Animator.StringToHash("IsChasing");
+    public static readonly int HashIsRunning = Animator.StringToHash("IsRunning");
+    public static readonly int HashIsAttacking = Animator.StringToHash("IsAttacking");
 
     // 스폰 & 타겟
     public Vector3 SpawnPosition { get; private set; }
@@ -48,7 +47,6 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
         StateMachine = new BearStateMachine();
         StateMachine.AddState(BearStateType.Idle, new BearIdleState(this));
         StateMachine.AddState(BearStateType.Patrol, new BearPatrolState(this));
-        StateMachine.AddState(BearStateType.Detect, new BearDetectState(this));
         StateMachine.AddState(BearStateType.Chase, new BearChaseState(this));
         StateMachine.AddState(BearStateType.Attack, new BearAttackState(this));
         StateMachine.AddState(BearStateType.Return, new BearReturnState(this));
@@ -66,6 +64,7 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
         if (PhotonNetwork.IsMasterClient)
         {
             StateMachine.Update();
+            UpdateAnimatorBools();
         }
         else
         {
@@ -73,12 +72,33 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
         }
     }
 
+    private void UpdateAnimatorBools()
+    {
+        BearStateType state = StateMachine.CurrentStateType;
+
+        bool isRunning = state == BearStateType.Chase || state == BearStateType.Return;
+        bool isAttacking = state == BearStateType.Attack;
+
+        Animator.SetBool(HashIsRunning, isRunning);
+        Animator.SetBool(HashIsAttacking, isAttacking);
+    }
+
+    private void UpdateAnimatorBools(BearStateType state)
+    {
+        bool isRunning = state == BearStateType.Chase || state == BearStateType.Return;
+        bool isAttacking = state == BearStateType.Attack;
+
+        Animator.SetBool(HashIsRunning, isRunning);
+        Animator.SetBool(HashIsAttacking, isAttacking);
+    }
+
     // === 리모트 애니메이션 동기화 ===
     private void SyncAnimationFromState()
     {
-        if (_syncedStateType != StateMachine.CurrentStateType)
+        if (_syncedStateType != _currentStateType)
         {
-            StateMachine.ChangeState(_syncedStateType);
+            _currentStateType = _syncedStateType;
+            UpdateAnimatorBools(_syncedStateType);
         }
     }
 
@@ -95,7 +115,8 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
                 PlayerController pc = hit.GetComponentInParent<PlayerController>();
                 if (pc != null && !pc.IsDead)
                 {
-                    LockedTarget = hit.transform;
+                    Transform cameraRoot = pc.transform.Find("CameraRoot");
+                    LockedTarget = cameraRoot != null ? cameraRoot : pc.transform;
                     return true;
                 }
             }
@@ -124,15 +145,7 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
         return SpawnPosition;
     }
 
-    // === Detect 애니메이션 종료 이벤트 (마지막 프레임에서 호출) ===
-    public void OnDetectEnd()
-    {
-        if (!PhotonNetwork.IsMasterClient) return;
-        if (StateMachine.CurrentStateType == BearStateType.Detect)
-        {
-            StateMachine.ChangeState(BearStateType.Chase);
-        }
-    }
+
 
     // === 공격 데미지 (애니메이션 이벤트에서 호출) ===
     public void OnAttackHit()
@@ -147,27 +160,11 @@ public class BearController : MonoBehaviourPun, IPunObservable, IDamageable
         if (!PhotonNetwork.IsMasterClient) return;
         if (StateMachine.CurrentStateType == BearStateType.Attack)
         {
-            StartCoroutine(AttackCooldownCoroutine());
+            (StateMachine.CurrentState as BearAttackState)?.OnAttackAnimFinished();
         }
     }
 
-    private System.Collections.IEnumerator AttackCooldownCoroutine()
-    {
-        yield return new WaitForSeconds(Stat.AttackCooldown);
 
-        if (StateMachine.CurrentStateType == BearStateType.Attack && !_isDead)
-        {
-            if (LockedTarget != null)
-            {
-                Vector3 dir = (LockedTarget.position - transform.position).normalized;
-                dir.y = 0f;
-                if (dir != Vector3.zero)
-                    transform.rotation = Quaternion.LookRotation(dir);
-            }
-
-            Animator.SetTrigger(HashAttack);
-        }
-    }
 
     // === Dead 애니메이션 종료 이벤트 (마지막 프레임에서 호출) ===
     public void OnDeadEnd()

@@ -17,14 +17,39 @@ public class BearHitState : BearStateBase
     public override void Update()
     {
         AnimatorStateInfo info = Animator.GetCurrentAnimatorStateInfo(0);
-        if (info.IsName("Hit") && info.normalizedTime >= 1f)
+        if (info.IsName("Hit") && info.normalizedTime >= 0.9f)
         {
             _animFinished = true;
         }
 
         if (_animFinished)
         {
-            Controller.StateMachine.RevertToPreviousState();
+            if (Controller.LockedTarget == null)
+            {
+                float distToSpawn = Vector3.Distance(Transform.position, Controller.SpawnPosition);
+                if (distToSpawn > 1.5f)
+                    Controller.StateMachine.ChangeState(BearStateType.Return);
+                else
+                    Controller.StateMachine.ChangeState(BearStateType.Idle);
+            }
+            else
+            {
+                float distToTarget = Vector3.Distance(Transform.position, Controller.LockedTarget.position);
+
+                if (distToTarget > Stat.DetectRange)
+                {
+                    Controller.ClearTarget();
+                    Controller.StateMachine.ChangeState(BearStateType.Return);
+                }
+                else if (distToTarget <= Stat.AttackRange)
+                {
+                    Controller.StateMachine.ChangeState(BearStateType.Attack);
+                }
+                else
+                {
+                    Controller.StateMachine.ChangeState(BearStateType.Chase);
+                }
+            }
         }
     }
 

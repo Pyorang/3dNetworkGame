@@ -52,6 +52,8 @@ MonoBehaviour:
   - RPC_SpawnPeriodicDropItems
   - RPC_Die
   - RPC_Hit
+  - SyncWeaponScale
+  - SyncWeaponScaleRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

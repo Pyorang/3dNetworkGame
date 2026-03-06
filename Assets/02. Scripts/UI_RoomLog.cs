@@ -6,18 +6,28 @@ public class UI_RoomLog : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _logText;
 
+
+
+    private void OnDisable()
+    {
+        if (PhotonRoomManager.Instance != null)
+        {
+            PhotonRoomManager.Instance.OnPlayerEnter -= OnPlayerEnter;
+            PhotonRoomManager.Instance.OnPlayerLeft -= OnPlayerLeft;
+        }
+        PlayerController.OnPlayerKilled -= OnPlayerKilled;
+    }
+
     private void Start()
     {
         _logText.text = "Room Entered.\n";
 
-        PhotonRoomManager.Instance.OnPlayerEnter += OnPlayerEnter;
-        PhotonRoomManager.Instance.OnPlayerLeft += OnPlayerLeft;
+        if (PhotonRoomManager.Instance != null)
+        {
+            PhotonRoomManager.Instance.RegisterPlayerEnter(OnPlayerEnter);
+            PhotonRoomManager.Instance.RegisterPlayerLeft(OnPlayerLeft);
+        }
         PlayerController.OnPlayerKilled += OnPlayerKilled;
-    }
-
-    private void OnDestroy()
-    {
-        PlayerController.OnPlayerKilled -= OnPlayerKilled;
     }
 
     private void OnPlayerEnter(Player newPlayer)

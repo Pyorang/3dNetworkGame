@@ -7,7 +7,9 @@ public class BearChaseState : BearStateBase
     public override void Enter()
     {
         Agent.speed = Stat.ChaseSpeed;
-        Animator.SetBool(BearController.HashIsChasing, true);
+
+        if (Controller.LockedTarget != null)
+            Agent.SetDestination(Controller.LockedTarget.position);
     }
 
     public override void Update()
@@ -19,7 +21,6 @@ public class BearChaseState : BearStateBase
         }
 
         float distToTarget = Vector3.Distance(Transform.position, Controller.LockedTarget.position);
-        Animator.SetFloat(BearController.HashMoveSpeed, Agent.velocity.magnitude);
         Agent.SetDestination(Controller.LockedTarget.position);
 
         if (distToTarget > Stat.DetectRange)

@@ -13,7 +13,6 @@ public class BearReturnState : BearStateBase
     {
         Agent.speed = Stat.ReturnSpeed;
         Agent.SetDestination(Controller.SpawnPosition);
-        Animator.SetBool(BearController.HashIsChasing, true);
 
         _healInterval = Stat.RecoveryDuration / Stat.RecoveryTicks;
         _healTicksRemaining = Stat.RecoveryTicks;
@@ -43,8 +42,5 @@ public class BearReturnState : BearStateBase
         }
     }
 
-    public override void Exit()
-    {
-        Animator.SetBool(BearController.HashIsChasing, false);
-    }
+    public override void Exit() { }
 }

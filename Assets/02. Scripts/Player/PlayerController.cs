@@ -62,6 +62,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
         PhotonView.RPC(nameof(SyncDeath), RpcTarget.Others, killerName);
         OnPlayerKilled?.Invoke(killerName, PhotonView.Owner.NickName);
         ScoreItemSpawner.Instance.RequestSpawnDeathDrop(transform.position);
+        ScoreManager.Instance.UpdateScore(ScoreManager.Instance.GetLocalScore() / 2);
         StartCoroutine(RespawnCoroutine());
     }
 
@@ -105,7 +106,7 @@ public class PlayerController : MonoBehaviour, IPunObservable, IDamageable
 
     private Vector3 GetRandomSpawnPosition()
     {
-        Transform[] spawnpoints = PhotonRoomManager.Instance.Spawnpoints;
+        Transform[] spawnpoints = PlayerSpawner.Instance.SpawnPoints;
         int randomIndex = UnityEngine.Random.Range(0, spawnpoints.Length);
         return spawnpoints[randomIndex].position;
     }
